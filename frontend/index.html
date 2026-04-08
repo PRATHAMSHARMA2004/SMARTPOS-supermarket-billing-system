@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartMart POS – Premium Retail Billing System</title>
+  <meta name="description"
+    content="SmartMart POS is a modern, premium retail point-of-sale billing system with inventory management, invoicing, and sales analytics.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <p>Loading SmartMart POS…</p>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Dashboard Detail Modal -->
+  <div id="detailModal" class="detail-modal-overlay hidden">
+    <div class="detail-modal">
+      <div class="detail-modal-header">
+        <div class="detail-modal-title-wrap">
+          <span class="material-icons-round" id="detailIcon">payments</span>
+          <h3 id="detailTitle">Detail View</h3>
+        </div>
+        <button class="btn-icon" onclick="closeDetailModal()"><span class="material-icons-round">close</span></button>
+      </div>
+      <div class="detail-modal-body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <!-- Print Invoice Overlay -->
+  <div id="invoiceOverlay" class="invoice-overlay hidden">
+    <div class="invoice-sheet" id="invoiceSheet">
+      <div class="invoice-actions no-print">
+        <button onclick="window.print()" class="btn btn-primary"><span class="material-icons-round">print</span>
+          Print</button>
+        <button onclick="closeInvoice()" class="btn btn-ghost"><span class="material-icons-round">close</span>
+          Close</button>
+      </div>
+      <div id="invoiceContent"></div>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <span class="material-icons-round">storefront</span>
+        </div>
+        <div class="brand-text">
+          <h1>SmartMart</h1>
+          <span>POS System</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard" id="nav-dashboard">
+          <span class="material-icons-round">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="billing" id="nav-billing">
+          <span class="material-icons-round">point_of_sale</span>
+          <span>Billing</span>
+        </a>
+        <a href="#" class="nav-item" data-page="inventory" id="nav-inventory">
+          <span class="material-icons-round">inventory_2</span>
+          <span>Inventory</span>
+        </a>
+        <a href="#" class="nav-item" data-page="history" id="nav-history">
+          <span class="material-icons-round">receipt_long</span>
+          <span>History</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-info">
+          <span class="material-icons-round">info</span>
+          <span>v2.0 Premium</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Navbar -->
+      <header class="topbar">
+        <button class="topbar-menu-btn" id="menuToggle">
+          <span class="material-icons-round">menu</span>
+        </button>
+        <div class="topbar-left">
+          <h2 id="pageTitle">Dashboard</h2>
+          <span class="topbar-breadcrumb" id="pageBreadcrumb">Overview & Analytics</span>
+        </div>
+        <div class="topbar-right">
+          <span class="topbar-date" id="topbarDate"></span>
+          <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+            <span class="material-icons-round" id="themeIcon">dark_mode</span>
+          </button>
+          <div class="topbar-avatar">
+            <span class="material-icons-round">account_circle</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page: Dashboard -->
+      <section class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card stat-revenue clickable-card" data-detail="revenue">
+            <div class="stat-icon"><span class="material-icons-round">payments</span></div>
+            <div class="stat-info">
+              <span class="stat-label">Total Revenue</span>
+              <span class="stat-value" id="statRevenue">$0.00</span>
+            </div>
+            <div class="stat-trend up"><span class="material-icons-round">trending_up</span></div>
+          </div>
+          <div class="stat-card stat-items clickable-card" data-detail="inventory">
+            <div class="stat-icon"><span class="material-icons-round">category</span></div>
+            <div class="stat-info">
+              <span class="stat-label">Inventory Items</span>
+              <span class="stat-value" id="statItems">0</span>
+            </div>
+            <div class="stat-trend neutral"><span class="material-icons-round">inventory</span></div>
+          </div>
+          <div class="stat-card stat-sales clickable-card" data-detail="todaySales">
+            <div class="stat-icon"><span class="material-icons-round">today</span></div>
+            <div class="stat-info">
+              <span class="stat-label">Today's Sales</span>
+              <span class="stat-value" id="statTodaySales">$0.00</span>
+            </div>
+            <div class="stat-trend up"><span class="material-icons-round">trending_up</span></div>
+          </div>
+          <div class="stat-card stat-bills clickable-card" data-detail="transactions">
+            <div class="stat-icon"><span class="material-icons-round">receipt</span></div>
+            <div class="stat-info">
+              <span class="stat-label">Total Transactions</span>
+              <span class="stat-value" id="statBills">0</span>
+            </div>
+            <div class="stat-trend neutral"><span class="material-icons-round">swap_vert</span></div>
+          </div>
+        </div>
+
+        <!-- Chart Area -->
+        <div class="dashboard-grid">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3><span class="material-icons-round">bar_chart</span> Revenue (Last 7 Days)</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+          <div class="card recent-card">
+            <div class="card-header">
+              <h3><span class="material-icons-round">history</span> Recent Transactions</h3>
+            </div>
+            <div id="recentBillsList" class="recent-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Page: Billing -->
+      <section class="page" id="page-billing">
+        <div class="billing-layout">
+          <!-- Product List -->
+          <div class="card billing-products">
+            <div class="card-header">
+              <h3><span class="material-icons-round">inventory_2</span> Products</h3>
+              <div class="search-box">
+                <span class="material-icons-round">search</span>
+                <input type="text" id="billingSearch" placeholder="Search products…">
+              </div>
+            </div>
+            <div class="product-grid" id="billingProductGrid"></div>
+          </div>
+
+          <!-- Cart -->
+          <div class="card billing-cart">
+            <div class="card-header">
+              <h3><span class="material-icons-round">shopping_cart</span> Current Order</h3>
+            </div>
+            <div class="cart-customer">
+              <div class="input-group">
+                <span class="material-icons-round">person</span>
+                <input type="text" id="customerName" placeholder="Customer name">
+              </div>
+              <div class="input-group">
+                <span class="material-icons-round">event</span>
+                <input type="date" id="billDate">
+              </div>
+            </div>
+            <div class="cart-items" id="cartItems">
+              <div class="cart-empty">
+                <span class="material-icons-round">add_shopping_cart</span>
+                <p>Add items to start billing</p>
+              </div>
+            </div>
+            <div class="cart-summary">
+              <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="cartSubtotal">$0.00</span>
+              </div>
+              <div class="summary-row">
+                <span>Tax (8%)</span>
+                <span id="cartTax">$0.00</span>
+              </div>
+              <div class="summary-row total">
+                <span>Total</span>
+                <span id="cartTotal">$0.00</span>
+              </div>
+              <button class="btn btn-primary btn-block" id="checkoutBtn" disabled>
+                <span class="material-icons-round">receipt</span> Generate Invoice
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Page: Inventory -->
+      <section class="page" id="page-inventory">
+        <div class="card">
+          <div class="card-header">
+            <h3><span class="material-icons-round">inventory_2</span> Inventory Management
+              <span class="badge" id="inventoryCount">0</span>
+            </h3>
+            <div class="card-header-actions">
+              <div class="search-box">
+                <span class="material-icons-round">search</span>
+                <input type="text" id="inventorySearch" placeholder="Search inventory…">
+              </div>
+              <button class="btn btn-primary" id="addItemBtn">
+                <span class="material-icons-round">add</span> Add Item
+              </button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="inventoryTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product Name</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Add/Edit Inventory Modal -->
+        <div class="modal-overlay hidden" id="inventoryModal">
+          <div class="modal">
+            <div class="modal-header">
+              <h3 id="modalTitle">Add New Item</h3>
+              <button class="btn-icon" onclick="closeInventoryModal()"><span
+                  class="material-icons-round">close</span></button>
+            </div>
+            <form id="inventoryForm" class="modal-body">
+              <input type="hidden" id="editItemId">
+              <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" id="itemName" required placeholder="e.g. Organic Milk">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Category</label>
+                  <input type="text" id="itemCategory" required placeholder="e.g. Dairy">
+                </div>
+                <div class="form-group">
+                  <label>Unit</label>
+                  <input type="text" id="itemUnit" required placeholder="e.g. ltr, kg, pcs">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Price ($)</label>
+                  <input type="number" step="0.01" id="itemPrice" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label>Quantity</label>
+                  <input type="number" id="itemQty" required placeholder="0">
+                </div>
+              </div>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeInventoryModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="modalSaveBtn">Save Item</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Page: History -->
+      <section class="page" id="page-history">
+        <div class="card">
+          <div class="card-header">
+            <h3><span class="material-icons-round">receipt_long</span> Transaction History</h3>
+            <div class="card-header-actions">
+              <div class="input-group">
+                <span class="material-icons-round">event</span>
+                <input type="date" id="historyDateFilter">
+              </div>
+              <div class="search-box">
+                <span class="material-icons-round">search</span>
+                <input type="text" id="historySearch" placeholder="Search by customer…">
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice ID</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state hidden" id="historyEmpty">
+            <span class="material-icons-round">receipt_long</span>
+            <p>No transactions found</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
